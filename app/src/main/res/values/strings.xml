@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Crime Zone</string>
+    <string name="button_main">Profile</string>
+    <string name="activity2_name">View Profile</string>
+    <string name="text_header">Welcome!</string>
+    <string name="fname">fname</string>
+    <string name="lname">lname</string>
+    <string name="phone">phone</string>
+    <string name="email">email</string>
+    <string name="user_profile_image">User Profile Image</string>
 </resources>
