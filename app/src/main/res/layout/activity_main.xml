@@ -6,11 +6,15 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <include layout="@layout/app_bar_layout"
+        android:id="@+id/main_page_toolbar"/>
+
     <Button
         android:id="@+id/button_main"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_below="@+id/main_page_toolbar"
+        android:layout_marginTop="47dp"
         android:onClick="launchViewProfile"
         android:text="@string/button_main"
         android:textSize="18sp"
