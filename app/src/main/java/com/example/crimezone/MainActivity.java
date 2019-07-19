@@ -11,8 +11,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.example.crimezone.APITesting;
-import com.example.crimezone.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -89,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
         if(item.getItemId() == R.id.main_logout_btn){
             FirebaseAuth.getInstance().signOut();
             sendToStart();
+        } else if (item.getItemId() == R.id.main_settings_btn) {
+            Intent settingsIntent = new Intent(MainActivity.this, ProfileActivity.class);
+            startActivity(settingsIntent);
         }
 
         return true;

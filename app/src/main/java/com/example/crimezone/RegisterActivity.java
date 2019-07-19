@@ -17,6 +17,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -28,6 +33,8 @@ public class RegisterActivity extends AppCompatActivity {
     private Button mCreateBtn;
 
     private Toolbar mToolbar;
+
+    private DatabaseReference mDatabase;
 
     private ProgressDialog mRegProgress;
 
@@ -71,14 +78,38 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
-    private void registerUser(String name, String email, String password) {
+    private void registerUser(final String name, final String email, String password) {
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if(task.isSuccessful()){
-                    Intent mainIntent = new Intent(RegisterActivity.this, MainActivity.class);
-                    startActivity(mainIntent);
-                    finish();
+
+                    FirebaseUser current_user = FirebaseAuth.getInstance().getCurrentUser();
+                    String uid = current_user.getUid();
+
+                    mDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child(uid);
+
+                    HashMap<String, String> userMap = new HashMap<>();
+                    userMap.put("name", name);
+                    userMap.put("image", "default");
+                    userMap.put("thumbnail_image", "default");
+                    userMap.put("email", email);
+                    userMap.put("phone", "123-456-7890");
+                    userMap.put("address", "default address");
+
+                    mDatabase.setValue(userMap).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            Intent mainIntent = new Intent(RegisterActivity.this, MainActivity.class);
+                            mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(mainIntent);
+                            finish();
+                        }
+                    });
+
+
+
+
                 } else {
 
                     mRegProgress.hide();

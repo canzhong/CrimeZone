@@ -7,7 +7,7 @@
         android:title="@string/logout" />
     <item
         android:id="@+id/main_settings_btn"
-        android:title="@string/account_setting" />
+        android:title="@string/account_settings" />
     <item
         android:id="@+id/main_events_btn"
         android:title="@string/all_events" />
