@@ -11,4 +11,7 @@
     <item
         android:id="@+id/main_events_btn"
         android:title="@string/all_events" />
+    <item
+        android:id="@+id/main_add_event_btn"
+        android:title="@string/add_event" />
 </menu>

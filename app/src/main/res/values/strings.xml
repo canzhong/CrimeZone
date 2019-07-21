@@ -13,4 +13,5 @@
     <string name="account_setting">Account Setting</string>
     <string name="all_events">All Events</string>
     <string name="account_settings">Account Settings</string>
+    <string name="add_event">Add Event</string>
 </resources>

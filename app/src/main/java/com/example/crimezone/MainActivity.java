@@ -90,6 +90,12 @@ public class MainActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.main_settings_btn) {
             Intent settingsIntent = new Intent(MainActivity.this, ProfileActivity.class);
             startActivity(settingsIntent);
+        } else if (item.getItemId() == R.id.main_add_event_btn) {
+            Intent addEventIntent = new Intent(MainActivity.this, EventRegisterActivity.class);
+            startActivity(addEventIntent);
+        } else if (item.getItemId() == R.id.main_events_btn) {
+            Intent allEventsIntent = new Intent(MainActivity.this, AllEventsActivity.class);
+            startActivity(allEventsIntent);
         }
 
         return true;
