@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +24,8 @@ import java.net.URL;
 public class ViewProfile extends AppCompatActivity {
 
     private User currentUser;
+
+    private static final String LOG_TAG = ViewProfile.class.getSimpleName();
 
 
     @Override
@@ -50,6 +53,20 @@ public class ViewProfile extends AppCompatActivity {
         textphone.setText(currentUser.getPhone());
 
     }
+
+    public void launchEditProfile(View view) {
+
+        Log.d(LOG_TAG, "Edit Profile Clicked!");
+
+        Intent intent = new Intent(this, EditProfile.class);
+        intent.putExtra("currentUser", currentUser);
+
+        startActivity(intent);
+
+
+    }
+
+
 
     private class DownloadImageFromInternet extends AsyncTask<String, Void, Bitmap> {
         ImageView imageView;

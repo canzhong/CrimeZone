@@ -9,4 +9,14 @@
     <include layout="@layout/app_bar_layout"
         android:id="@+id/main_page_toolbar"/>
 
+    <Button
+        android:id="@+id/changeToMaps"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="300dp"
+        android:background="@color/colorAccent"
+        android:text="Map Perspective"
+        android:textColor="@android:color/white" />
+
 </RelativeLayout>
