@@ -50,7 +50,6 @@ public class EventRegisterActivity extends AppCompatActivity {
 //        String eventId = name + random();
 //        mEventsDatabase = FirebaseDatabase.getInstance().getReference().child("Events");
 //        mEventsDatabase.child("eventId").setValue(eventId);
-
 //        mEventSettingsDatabase = FirebaseDatabase.getInstance().getReference().child("Events").child(eventId);
 
         mSaveBtn = (Button) findViewById(R.id.save_btn);

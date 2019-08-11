@@ -1,6 +1,11 @@
 package com.example.crimezone;
 
 import androidx.annotation.NonNull;
+
+import android.content.Intent;
+import android.graphics.Color;
+import android.location.LocationManager;
+import android.os.Handler;
 import android.util.Log;
 import androidx.fragment.app.FragmentActivity;
 import android.nfc.Tag;
@@ -14,7 +19,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.UiSettings;
 
 import android.location.Location;
 
@@ -34,25 +42,31 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.example.crimezone.Events2;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarkerClickListener, OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
 
 
 
     private GoogleMap mMap;
+    private UiSettings mUiSettings;
+    private Circle mCircle;
+    private LatLng currentLoc;
+    private LocationManager mLocationManager;
+    private android.location.LocationListener mLocationListener;
+
     private static boolean mLocationPermissionGranted;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 100;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation;
-    private static final int DEFAULT_ZOOM = 15;
+    private static final int DEFAULT_ZOOM = 13;
     private static final LatLng mDefaultLocation = new LatLng(-34, 151);;
-    private static Tag TAG;
-    private List eventList = new ArrayList<Events2>();
     private DatabaseReference mDatabase;
-    private List eventsList;
-    private List markerList;
 
+
+
+    private HashMap<Marker, Events2> eventsHashMap = new HashMap<Marker, Events2>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +79,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
     }
+
 
 
     /**
@@ -80,14 +96,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mUiSettings = mMap.getUiSettings();
 
         getLocationPermission();
         updateLocationUI();
         getDeviceLocation();
         displayMarkers();
 
-        // Add a marker in Sydney and move the camera
+        setUserInterfaceControls();
+        mMap.setOnMarkerClickListener(this);
+        mMap.setOnInfoWindowClickListener(this);
+
+
     }
+
+
+
+    private void setUserInterfaceControls() {
+        mUiSettings.setZoomControlsEnabled(true);
+        mUiSettings.setCompassEnabled(true);
+        mUiSettings.setMyLocationButtonEnabled(true);
+
+        mUiSettings.setScrollGesturesEnabled(true);
+        mUiSettings.setZoomControlsEnabled(true);
+        mUiSettings.setRotateGesturesEnabled(true);
+    }
+
 
     private void getLocationPermission() {
         /*
@@ -98,7 +132,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
+            mMap.setMyLocationEnabled(true);
             mLocationPermissionGranted = true;
+
+
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
@@ -120,6 +157,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         }
+
         updateLocationUI();
     }
 
@@ -148,6 +186,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
          * Get the best and most recent location of the device, which may be null in rare
          * cases when a location is not available.
          */
+
         try {
             if (mLocationPermissionGranted) {
                 Task locationResult = mFusedLocationProviderClient.getLastLocation();
@@ -157,9 +196,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         if (task.isSuccessful()) {
                             // Set the map's camera position to the current location of the device.
                             mLastKnownLocation = (Location) task.getResult();
+                            currentLoc = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                    new LatLng(mLastKnownLocation.getLatitude(),
-                                            mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                                    currentLoc, DEFAULT_ZOOM));
+                            if (mCircle == null) {
+                                mCircle = mMap.addCircle(new CircleOptions()
+                                        .center(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))
+                                        .radius(1609)
+                                        .strokeColor(Color.TRANSPARENT)
+                                        .fillColor(0x25ff9999)
+                                );
+                            } else {
+                                mCircle.setCenter(currentLoc);
+                            }
+
                         } else {
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
                             mMap.getUiSettings().setMyLocationButtonEnabled(false);
@@ -173,12 +223,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    private void saveList(List list) {
-        this.eventsList = list;
-    }
-    private List getList(){
-        return this.eventsList;
-    }
+
     private void displayMarkers(){
 
 // ...
@@ -197,14 +242,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
-
-
-
     }
 
     private void addMarker(Events2 temp){
-        mMap.addMarker(new MarkerOptions()
+        Marker mark = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(temp.latitude, temp.longitude))
-                .title(temp.name));
+                .title(temp.name)
+                .snippet("Address: " + temp.getAddress()));
+
+        eventsHashMap.put(mark, temp);
+
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        marker.showInfoWindow();
+        return true;
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Events2 temp = eventsHashMap.get(marker);
+        String eventId = temp.name;
+        DatabaseReference mDataRef = FirebaseDatabase.getInstance().getReference().child("Events").child(eventId);
+        Intent eventIntent = new Intent(MapsActivity.this, EventActivity.class);
+        eventIntent.putExtra("eventId", eventId);
+        startActivity(eventIntent);
     }
 }
