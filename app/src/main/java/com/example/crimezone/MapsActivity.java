@@ -2,7 +2,7 @@ package com.example.crimezone;
 
 import androidx.annotation.NonNull;
 
-import android.content.Context;
+import android.Manifest;
 import android.content.Intent;
 import android.graphics.Color;
 import android.location.LocationListener;
@@ -64,14 +64,15 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements
         GoogleMap.OnMarkerClickListener,
         OnMapReadyCallback,
-        GoogleMap.OnInfoWindowClickListener
-        {
+        GoogleMap.OnInfoWindowClickListener {
 
 
     private GoogleMap mMap;
     private UiSettings mUiSettings;
     private Circle mCircle;
     private LatLng currentLoc;
+    private LocationManager mLocationManager;
+    private android.location.LocationListener mLocationListener;
 
     private static boolean mLocationPermissionGranted;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 100;
@@ -84,14 +85,13 @@ public class MapsActivity extends FragmentActivity implements
     private HashMap<Marker, Events2> eventsHashMap = new HashMap<Marker, Events2>();
 
     private static final String TAG = "MapActivity";
-    private static final long INTERVAL = 1000 * 10;
-    private static final long FASTEST_INTERVAL = 1000 * 5;
+    private static final long INTERVAL = 1000 * 80;
+    private static final long FASTEST_INTERVAL = 1000 * 40;
     LocationRequest locationRequest;
     private boolean requestingLocationUpdates;
     private LocationCallback locationCallback;
     private Location pLocation;
     private LocationManager mLocationmanager;
-    private LocationListener mLocationListener;
 
 
     @Override
@@ -107,32 +107,7 @@ public class MapsActivity extends FragmentActivity implements
 
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
-
-        SettingsClient client = LocationServices.getSettingsClient(this);
-        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
-
-        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-            @Override
-            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                requestingLocationUpdates = true;
-                createLocationRequest();
-            }
-        });
-
-        task.addOnFailureListener(this, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-
-            }
-        });
-
-
-
-
+        requestZoneUpdates();
 
     }
 
@@ -161,95 +136,40 @@ public class MapsActivity extends FragmentActivity implements
         mMap.setOnMarkerClickListener(this);
         mMap.setOnInfoWindowClickListener(this);
 
-        mLocationmanager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        mLocationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                mCircle.remove();
-                mCircle = mMap.addCircle(new CircleOptions()
-                        .center(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))
-                        .radius(1609)
-                        .strokeColor(Color.TRANSPARENT)
-                        .fillColor(0x25ff9999));
+    }
 
-            }
-
-            public void onStatusChanged(String provier, int status, Bundle extras) {}
-
-            public void onProviderEnabled(String provider) {}
-
-            public void onProviderDisabled(String provider) {}
-        };
-
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
-                for (Location location : locationResult.getLocations()) {
-                    mMap.getUiSettings();
-                }
-            }
-
-        };
-
-        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            mMap.setMyLocationEnabled(true);
-            mLocationPermissionGranted = true;
-            mFusedLocationProviderClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            if (location != null) {
-                                mCircle = mMap.addCircle(new CircleOptions()
-                                        .center(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))
-                                        .radius(1609)
-                                        .strokeColor(Color.TRANSPARENT)
-                                        .fillColor(0x25ff9999));
-                            }
-                        }
-                    });
-
-
+    public void draw(Location location) {
+        if (mCircle == null) {
+            mCircle = mMap.addCircle(new CircleOptions()
+                    .center(new LatLng(location.getLatitude(), location.getLongitude()))
+                    .radius(1609)
+                    .strokeColor(Color.TRANSPARENT)
+                    .fillColor(0x25ff9999)
+            );
         } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-        }
-
-    }
-
-    protected void createLocationRequest() {
-        locationRequest = LocationRequest.create();
-        locationRequest.setInterval(INTERVAL);
-        locationRequest.setFastestInterval(FASTEST_INTERVAL);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (requestingLocationUpdates) {
-            startLocationUpdates();
+            mCircle.setCenter(new LatLng(location.getLatitude(), location.getLongitude()));
         }
     }
 
-    protected void startLocationUpdates() {
-        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            mFusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-            Log.d(TAG, "Location update started ..............: ");
+    private void requestZoneUpdates() {
+        LocationRequest request = new LocationRequest();
 
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        request.setInterval(10000);
+
+        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        FusedLocationProviderClient client = LocationServices.getFusedLocationProviderClient(this);
+        int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+
+        if (permission == PackageManager.PERMISSION_GRANTED) {
+            client.requestLocationUpdates(request, new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    draw(locationResult.getLastLocation());
+                }
+            }, null);
+
         }
     }
-
 
     private void setUserInterfaceControls() {
         mUiSettings.setZoomControlsEnabled(true);
@@ -360,16 +280,8 @@ public class MapsActivity extends FragmentActivity implements
 
     }
 
-    protected void updateView() {
-
-
-    }
-
     private void displayMarkers(){
-
-// ...
         mDatabase = FirebaseDatabase.getInstance().getReference();
-
         mDatabase.child("Events").addValueEventListener(new ValueEventListener() {
            @Override
            public void onDataChange(DataSnapshot dataSnapshot) {
@@ -380,7 +292,6 @@ public class MapsActivity extends FragmentActivity implements
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
         });
     }
