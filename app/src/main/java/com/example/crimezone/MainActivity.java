@@ -3,6 +3,8 @@ package com.example.crimezone;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -38,19 +40,8 @@ public class MainActivity extends AppCompatActivity {
 
         mToolbar = (androidx.appcompat.widget.Toolbar) findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
+
         getSupportActionBar().setTitle("Crime Zone");
-
-        mapsButton = (Button) findViewById(R.id.changeToMaps);
-
-        mapsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Intent mapsIntent = new Intent(MainActivity.this, MapsActivity.class);
-                startActivity(mapsIntent);
-            }
-        });
-
 
     }
 

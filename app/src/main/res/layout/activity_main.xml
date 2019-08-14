@@ -9,14 +9,14 @@
     <include layout="@layout/app_bar_layout"
         android:id="@+id/main_page_toolbar"/>
 
-    <Button
-        android:id="@+id/changeToMaps"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="300dp"
-        android:background="@color/colorAccent"
-        android:text="Map Perspective"
-        android:textColor="@android:color/white" />
+   <fragment
+       android:name="com.example.crimezone.MapsFragment"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:id="@+id/main_maps_fragment"
+       android:layout_below="@id/main_page_toolbar"
+       />
+
 
 </RelativeLayout>
+

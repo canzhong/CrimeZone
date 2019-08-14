@@ -9,6 +9,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -50,6 +52,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.gms.location.LocationServices;
 
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -165,6 +168,7 @@ public class MapsActivity extends FragmentActivity implements
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     draw(locationResult.getLastLocation());
+
                 }
             }, null);
 
@@ -282,6 +286,34 @@ public class MapsActivity extends FragmentActivity implements
 
     private void displayMarkers(){
         mDatabase = FirebaseDatabase.getInstance().getReference();
+
+        mDatabase.child("Events").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
         mDatabase.child("Events").addValueEventListener(new ValueEventListener() {
            @Override
            public void onDataChange(DataSnapshot dataSnapshot) {
